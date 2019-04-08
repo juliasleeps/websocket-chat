@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chat</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" 
+    integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src='/socket.io/socket.io.js'></script>
+</head>
+<body>
+    <script>
+        var socket = io();
+
+        // 1 Добавление пользователя и проверка на существование
+        function setUserName(){
+            socket.emit('setUserName', document.getElementById('name').value);
+        }
+
+        var user;
+
+        socket.on('userExist', function(data){
+            document.getElementById('error').innerHTML(data);
+        });
+
+        socket.on('userSet', function(data){
+            user = data.userName;
+            document.body.innerHTML = '\
+                <div class="container">\
+                <div class="row">\
+                    <div class="col-lg-6 offset-lg-3">\
+                        <div class="form-group">\
+                            <input type="text" class="form-control" id="message" placeholder="Пиши здесь...">\
+                                <button type="button" class="btn btn-primary" name="button" onclick="sendMessage()">Отправить</button>\
+                                <div id="message-container"></div>\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>'
+            });
+        
+        // Добавление сообщений
+        function sendMessage(){
+            var messageData = document.getElementById('message').value;
+            if (messageData){
+                socket.emit('message', {user: user, message: messageData});
+                
+            }
+            document.getElementById('message').value = '';
+        }
+        socket.on('newMessage', function(data){
+            if(user){
+                document.getElementById('message-container').innerHTML += '<div><b>' + data.user + '</b>:' + data.message + '</div>'
+            }
+        })
+    </script>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 offset-lg-3">
+                <div class="error"></div>
+                <div class="form-group">
+                    <label for="name">Давай общаться</label>
+                    <input type="text" class="form-control" id="name" placeholder="Введите свое имя">
+                    <button type="button" class="btn btn-primary" name="button" onclick="setUserName()">Вперед!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
